@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Weather Dashboard</title>
+
+    <style>
+        /* --- CONSTANT AURORA BACKGROUND --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+
+            /* Center the main wrapper vertically and horizontally */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- SPLIT SCREEN LAYOUT --- */
+        .main-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 80px; /* Space between the emoji and the form */
+            width: 90%;
+            max-width: 1000px;
+        }
+
+        /* --- LEFT SIDE: ANIMATIONS --- */
+        .animation-panel {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* Make the emojis massive! */
+        .weather-icon {
+            font-size: 200px; /* Increased from 80px */
+            margin: 0;
+            display: inline-block;
+            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.3)); /* Adds a cool 3D shadow */
+        }
+
+        .animation-text {
+            color: white;
+            font-size: 32px;
+            text-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+            margin-top: 20px;
+        }
+
+        /* Animation Keyframes */
+        .sunny-spin { animation: rotateAnimation 15s linear infinite; }
+        @keyframes rotateAnimation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .rain-rock { animation: rockAnimation 3s ease-in-out infinite; }
+        @keyframes rockAnimation {
+            0%, 100% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+        }
+
+        .default-float { animation: floatAnimation 4s ease-in-out infinite; }
+        @keyframes floatAnimation {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* --- RIGHT SIDE: FORM CONTAINER --- */
+        .app-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 20px 40px rgba(0,0,0,0.4);
+            width: 350px;
+            text-align: center;
+        }
+
+        input {
+            margin: 10px 0;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            width: 90%;
+            font-size: 16px;
+            box-sizing: border-box; /* Keeps inputs perfectly inside the box */
+        }
+
+        button {
+            padding: 14px;
+            width: 90%;
+            border: none;
+            border-radius: 10px;
+            background-color: #0ea5e9;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #0284c7; }
+
+        .hidden { display: none; }
+        #error-msg { color: #ef4444; margin-top: 15px; font-weight: bold; }
+
+        /* Mobile responsiveness: stack them if the screen is small */
+        @media (max-width: 800px) {
+            .main-wrapper {
+                flex-direction: column;
+                gap: 40px;
+                margin-top: 40px;
+                margin-bottom: 40px;
+            }
+            .weather-icon { font-size: 120px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+
+        <div class="animation-panel">
+
+            <div id="default-animation">
+                <div class="weather-icon default-float">🌍</div>
+                <h2 class="animation-text">Awaiting Data...</h2>
+            </div>
+
+            <div id="sunny-animation" class="hidden">
+                <div class="weather-icon sunny-spin">☀️</div>
+                <h2 class="animation-text" style="color: #fde047;">It's going to be Sunny!</h2>
+            </div>
+
+            <div id="rain-animation" class="hidden">
+                <div class="weather-icon rain-rock">🌧️</div>
+                <h2 class="animation-text" style="color: #93c5fd;">Grab an umbrella, it's Rain!</h2>
+            </div>
+        </div>
+
+        <div class="app-container">
+            <h1 style="color: #0f172a; margin-top: 0;">AI Weather</h1>
+            <p style="color: #64748b; margin-bottom: 25px;">Enter metrics to predict rain.</p>
+
+            <input type="number" id="temp" placeholder="Temperature (°C)">
+            <input type="number" id="hum" placeholder="Humidity (%)">
+            <input type="number" id="wind" placeholder="Wind Speed">
+            <input type="number" id="cloud" placeholder="Cloud Cover">
+            <input type="number" id="press" placeholder="Pressure">
+
+            <button onclick="makePrediction()">Predict the Weather!</button>
+            <p id="error-msg"></p>
+        </div>
+
+    </div>
+
+    <script>
+        async function makePrediction() {
+            // Hide all animations and clear errors
+            document.getElementById('default-animation').classList.add('hidden');
+            document.getElementById('sunny-animation').classList.add('hidden');
+            document.getElementById('rain-animation').classList.add('hidden');
+            document.getElementById('error-msg').innerText = "";
+
+            // Collect inputs
+            const temp = parseFloat(document.getElementById('temp').value);
+            const hum = parseFloat(document.getElementById('hum').value);
+            const wind = parseFloat(document.getElementById('wind').value);
+            const cloud = parseFloat(document.getElementById('cloud').value);
+            const press = parseFloat(document.getElementById('press').value);
+
+            // Error check
+            if (isNaN(temp) || isNaN(hum) || isNaN(wind) || isNaN(cloud) || isNaN(press)) {
+                document.getElementById('error-msg').innerText = "Please fill in all 5 boxes!";
+                document.getElementById('default-animation').classList.remove('hidden'); // Show default again
+                return;
+            }
+
+            const data = {
+                Temperature: temp,
+                Humidity: hum,
+                Wind_Speed: wind,
+                Cloud_Cover: cloud,
+                Pressure: press
+            };
+
+            try {
+                // Fetch prediction from your Python backend
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) throw new Error("Server Error");
+
+                const result = await response.json();
+
+                // SHOW THE CORRECT ANIMATION!
+                if (result.weather === 'rain') {
+                    document.getElementById('rain-animation').classList.remove('hidden');
+                } else {
+                    document.getElementById('sunny-animation').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('error-msg').innerText = "Error: Could not reach the AI.";
+                document.getElementById('default-animation').classList.remove('hidden');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
