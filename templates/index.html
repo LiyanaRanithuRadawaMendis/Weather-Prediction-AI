@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Weather Dashboard</title>
+    <title>Immersive AI Weather</title>
 
     <style>
-        /* --- CONSTANT AURORA BACKGROUND --- */
+        /* --- BACKGROUND & LAYOUT --- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             min-height: 100vh;
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-
-            /* Center the main wrapper vertically and horizontally */
+            background: #1e293b; /* Base dark color */
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden; /* Keeps particles from creating scrollbars */
+            transition: background 2s ease;
         }
+
+        /* Dynamic Background Colors */
+        .bg-default { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientBG 15s ease infinite; }
+        .bg-sunny { background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); }
+        .bg-rain { background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%); }
+        .bg-fog { background: linear-gradient(to bottom, #94a3b8 0%, #cbd5e1 100%); }
 
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
@@ -27,112 +31,125 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* --- SPLIT SCREEN LAYOUT --- */
+        /* --- IMMERSIVE PARTICLE EFFECTS (PURE CSS) --- */
+        #effects-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Lets you click the form through the effects */
+            z-index: 0;
+        }
+
+        /* Raindrops */
+        .raindrop {
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.8));
+            width: 2px;
+            height: 80px;
+            animation: fall linear infinite;
+        }
+
+        /* Leaves */
+        .leaf {
+            position: absolute;
+            font-size: 24px;
+            animation: leafFall linear infinite;
+        }
+
+        /* Fog */
+        .fog-cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: drift linear infinite;
+        }
+
+        /* Particle Animations */
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+        @keyframes leafFall {
+            0% { transform: translateY(-10vh) rotate(0deg) translateX(0); }
+            50% { transform: translateY(50vh) rotate(180deg) translateX(50px); }
+            100% { transform: translateY(110vh) rotate(360deg) translateX(-50px); }
+        }
+        @keyframes drift {
+            from { transform: translateX(-50vw); }
+            to { transform: translateX(150vw); }
+        }
+
+        /* --- UI COMPONENTS (Z-index keeps them above the weather) --- */
         .main-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 80px; /* Space between the emoji and the form */
+            gap: 80px;
             width: 90%;
             max-width: 1000px;
+            z-index: 10;
         }
 
-        /* --- LEFT SIDE: ANIMATIONS --- */
-        .animation-panel {
-            flex: 1;
-            text-align: center;
-        }
+        .animation-panel { flex: 1; text-align: center; }
 
-        /* Make the emojis massive! */
         .weather-icon {
-            font-size: 200px; /* Increased from 80px */
-            margin: 0;
-            display: inline-block;
-            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.3)); /* Adds a cool 3D shadow */
+            font-size: 200px; margin: 0; display: inline-block;
+            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.4));
         }
 
         .animation-text {
-            color: white;
-            font-size: 32px;
-            text-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-            margin-top: 20px;
+            color: white; font-size: 32px; font-weight: bold;
+            text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+            margin-top: 20px; margin-bottom: 10px;
         }
 
-        /* Animation Keyframes */
-        .sunny-spin { animation: rotateAnimation 15s linear infinite; }
-        @keyframes rotateAnimation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .sunny-spin { animation: spin 15s linear infinite; }
+        .rain-rock { animation: rock 3s ease-in-out infinite; }
+        .fog-pulse { animation: pulse 4s ease-in-out infinite; }
+        .default-float { animation: float 4s ease-in-out infinite; }
 
-        .rain-rock { animation: rockAnimation 3s ease-in-out infinite; }
-        @keyframes rockAnimation {
-            0%, 100% { transform: rotate(-15deg); }
-            50% { transform: rotate(15deg); }
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes rock { 0%, 100% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } }
 
-        .default-float { animation: floatAnimation 4s ease-in-out infinite; }
-        @keyframes floatAnimation {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        /* Probability Bar */
+        .prob-container {
+            width: 80%; margin: 0 auto;
+            background: rgba(0, 0, 0, 0.4); border-radius: 20px; padding: 15px;
+            backdrop-filter: blur(5px);
         }
+        .prob-text { color: white; font-size: 18px; font-weight: bold; margin: 0 0 10px 0; }
+        .prob-track { width: 100%; height: 12px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; }
+        .prob-fill { height: 100%; width: 0%; border-radius: 10px; transition: width 1s ease-out, background-color 0.5s; }
 
-        /* --- RIGHT SIDE: FORM CONTAINER --- */
+        /* Form */
         .app-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0px 20px 40px rgba(0,0,0,0.4);
-            width: 350px;
-            text-align: center;
+            background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 20px;
+            box-shadow: 0px 20px 40px rgba(0,0,0,0.5); width: 350px; text-align: center;
         }
-
-        input {
-            margin: 10px 0;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #cbd5e1;
-            width: 90%;
-            font-size: 16px;
-            box-sizing: border-box; /* Keeps inputs perfectly inside the box */
-        }
-
-        button {
-            padding: 14px;
-            width: 90%;
-            border: none;
-            border-radius: 10px;
-            background-color: #0ea5e9;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+        input { margin: 10px 0; padding: 14px; border-radius: 10px; border: 1px solid #cbd5e1; width: 90%; font-size: 16px; box-sizing: border-box; }
+        button { padding: 14px; width: 90%; border: none; border-radius: 10px; background-color: #0ea5e9; color: white; font-weight: bold; font-size: 18px; margin-top: 20px; cursor: pointer; transition: 0.3s; }
         button:hover { background-color: #0284c7; }
-
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         #error-msg { color: #ef4444; margin-top: 15px; font-weight: bold; }
 
-        /* Mobile responsiveness: stack them if the screen is small */
         @media (max-width: 800px) {
-            .main-wrapper {
-                flex-direction: column;
-                gap: 40px;
-                margin-top: 40px;
-                margin-bottom: 40px;
-            }
+            .main-wrapper { flex-direction: column; gap: 40px; margin: 40px 0; }
             .weather-icon { font-size: 120px; }
         }
     </style>
 </head>
-<body>
+<body id="main-body" class="bg-default">
+
+    <audio id="audio-rain" loop preload="auto" src="https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg"></audio>
+    <audio id="audio-sunny" loop preload="auto" src="https://actions.google.com/sounds/v1/impacts/forest_wood_snapping.ogg"></audio>
+    <audio id="audio-fog" loop preload="auto" src="https://actions.google.com/sounds/v1/horror/hallow_wind.ogg"></audio>
+
+    <div id="effects-container"></div>
 
     <div class="main-wrapper">
 
         <div class="animation-panel">
-
             <div id="default-animation">
                 <div class="weather-icon default-float">🌍</div>
                 <h2 class="animation-text">Awaiting Data...</h2>
@@ -140,63 +157,118 @@
 
             <div id="sunny-animation" class="hidden">
                 <div class="weather-icon sunny-spin">☀️</div>
-                <h2 class="animation-text" style="color: #fde047;">It's going to be Sunny!</h2>
+                <h2 class="animation-text" style="color: #fef08a;">Clear & Sunny!</h2>
             </div>
 
             <div id="rain-animation" class="hidden">
                 <div class="weather-icon rain-rock">🌧️</div>
-                <h2 class="animation-text" style="color: #93c5fd;">Grab an umbrella, it's Rain!</h2>
+                <h2 class="animation-text" style="color: #bfdbfe;">Heavy Rain Expected!</h2>
+            </div>
+
+            <div id="fog-animation" class="hidden">
+                <div class="weather-icon fog-pulse">🌫️</div>
+                <h2 class="animation-text" style="color: #f8fafc;">Thick Fog / Overcast</h2>
+            </div>
+
+            <div id="prob-ui" class="prob-container hidden">
+                <p id="prob-text" class="prob-text">Rain Probability: 0%</p>
+                <div class="prob-track">
+                    <div id="prob-fill" class="prob-fill"></div>
+                </div>
             </div>
         </div>
 
         <div class="app-container">
             <h1 style="color: #0f172a; margin-top: 0;">AI Weather</h1>
-            <p style="color: #64748b; margin-bottom: 25px;">Enter metrics to predict rain.</p>
+            <p style="color: #64748b; margin-bottom: 25px;">Enter metrics to predict weather.</p>
 
             <input type="number" id="temp" placeholder="Temperature (°C)">
             <input type="number" id="hum" placeholder="Humidity (%)">
-            <input type="number" id="wind" placeholder="Wind Speed">
-            <input type="number" id="cloud" placeholder="Cloud Cover">
-            <input type="number" id="press" placeholder="Pressure">
+            <input type="number" id="wind" placeholder="Wind Speed (km/h)">
+            <input type="number" id="cloud" placeholder="Cloud Cover (%)">
+            <input type="number" id="press" placeholder="Pressure (hPa)">
 
             <button onclick="makePrediction()">Predict the Weather!</button>
             <p id="error-msg"></p>
         </div>
-
     </div>
 
     <script>
+        // --- IMMERSIVE EFFECT GENERATORS ---
+        const effectsContainer = document.getElementById('effects-container');
+
+        function clearEffects() {
+            effectsContainer.innerHTML = '';
+        }
+
+        function createRain() {
+            for(let i=0; i<100; i++) {
+                let drop = document.createElement('div');
+                drop.className = 'raindrop';
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                drop.style.animationDelay = Math.random() * 2 + 's';
+                effectsContainer.appendChild(drop);
+            }
+        }
+
+        function createLeaves() {
+            const leaves = ['🍂', '🍃', '🍁'];
+            for(let i=0; i<30; i++) {
+                let leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                leaf.innerText = leaves[Math.floor(Math.random() * leaves.length)];
+                leaf.style.left = Math.random() * 100 + 'vw';
+                leaf.style.fontSize = (Math.random() * 20 + 15) + 'px';
+                leaf.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                leaf.style.animationDelay = Math.random() * 5 + 's';
+                effectsContainer.appendChild(leaf);
+            }
+        }
+
+        function createFog() {
+            for(let i=0; i<5; i++) {
+                let cloud = document.createElement('div');
+                cloud.className = 'fog-cloud';
+                cloud.style.top = (Math.random() * 50 + 20) + 'vh';
+                cloud.style.width = (Math.random() * 400 + 200) + 'px';
+                cloud.style.height = (Math.random() * 200 + 100) + 'px';
+                cloud.style.animationDuration = (Math.random() * 20 + 15) + 's';
+                cloud.style.animationDelay = (Math.random() * -10) + 's';
+                effectsContainer.appendChild(cloud);
+            }
+        }
+
+        function stopAllAudio() {
+            document.getElementById('audio-rain').pause();
+            document.getElementById('audio-sunny').pause();
+            document.getElementById('audio-fog').pause();
+        }
+
+        // --- MAIN PREDICTION LOGIC ---
         async function makePrediction() {
-            // Hide all animations and clear errors
             document.getElementById('default-animation').classList.add('hidden');
             document.getElementById('sunny-animation').classList.add('hidden');
             document.getElementById('rain-animation').classList.add('hidden');
+            document.getElementById('fog-animation').classList.add('hidden');
+            document.getElementById('prob-ui').classList.add('hidden');
             document.getElementById('error-msg').innerText = "";
 
-            // Collect inputs
             const temp = parseFloat(document.getElementById('temp').value);
             const hum = parseFloat(document.getElementById('hum').value);
             const wind = parseFloat(document.getElementById('wind').value);
             const cloud = parseFloat(document.getElementById('cloud').value);
             const press = parseFloat(document.getElementById('press').value);
 
-            // Error check
             if (isNaN(temp) || isNaN(hum) || isNaN(wind) || isNaN(cloud) || isNaN(press)) {
                 document.getElementById('error-msg').innerText = "Please fill in all 5 boxes!";
-                document.getElementById('default-animation').classList.remove('hidden'); // Show default again
+                document.getElementById('default-animation').classList.remove('hidden');
                 return;
             }
 
-            const data = {
-                Temperature: temp,
-                Humidity: hum,
-                Wind_Speed: wind,
-                Cloud_Cover: cloud,
-                Pressure: press
-            };
+            const data = { Temperature: temp, Humidity: hum, Wind_Speed: wind, Cloud_Cover: cloud, Pressure: press };
 
             try {
-                // Fetch prediction from your Python backend
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -206,17 +278,47 @@
                 if (!response.ok) throw new Error("Server Error");
 
                 const result = await response.json();
+                const bodyElement = document.getElementById('main-body');
+                const prob = result.probability;
 
-                // SHOW THE CORRECT ANIMATION!
-                if (result.weather === 'rain') {
+                // Stop previous audio and clear screen particles
+                stopAllAudio();
+                clearEffects();
+                document.getElementById('prob-ui').classList.remove('hidden');
+                document.getElementById('prob-text').innerText = `Rain Probability: ${prob}%`;
+
+                const probBar = document.getElementById('prob-fill');
+                probBar.style.width = `${prob}%`;
+
+                // 3-WAY WEATHER LOGIC
+                if (prob > 65) {
+                    // RAIN
+                    bodyElement.className = 'bg-rain';
+                    probBar.style.backgroundColor = '#3b82f6';
                     document.getElementById('rain-animation').classList.remove('hidden');
-                } else {
-                    document.getElementById('sunny-animation').classList.remove('hidden');
+                    createRain();
+                    document.getElementById('audio-rain').play();
                 }
+                else if (prob < 35) {
+                    // SUNNY
+                    bodyElement.className = 'bg-sunny';
+                    probBar.style.backgroundColor = '#facc15';
+                    document.getElementById('sunny-animation').classList.remove('hidden');
+                    createLeaves();
+                    document.getElementById('audio-sunny').play();
+                }
+                else {
+                    // FOGGY (In between)
+                    bodyElement.className = 'bg-fog';
+                    probBar.style.backgroundColor = '#94a3b8';
+                    document.getElementById('fog-animation').classList.remove('hidden');
+                    createFog();
+                    document.getElementById('audio-fog').play();
+                }
+
             } catch (error) {
                 document.getElementById('error-msg').innerText = "Error: Could not reach the AI.";
                 document.getElementById('default-animation').classList.remove('hidden');
-                console.error(error);
             }
         }
     </script>
